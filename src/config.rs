@@ -1,14 +1,13 @@
-
 use quicli::prelude::*;
 
 use serde_derive::Deserialize;
-use toml;
-use std::io;
 use std::fs;
+use std::io;
+use toml;
 
+use std::error::Error;
 use std::path::Path;
 use toml::value::*;
-use std::error::Error;
 
 #[derive(Deserialize)]
 pub(crate) struct RstowConfig {
@@ -20,12 +19,14 @@ impl RstowConfig {
     pub(crate) fn default() -> RstowConfig {
         RstowConfig {
             symlink_current_dir: true,
-            ignore_files: Vec::new()
+            ignore_files: Vec::new(),
         }
     }
 
     pub(crate) fn is_ignored(config: &RstowConfig, entry: &str) -> bool {
-        config.ignore_files.clone()
+        config
+            .ignore_files
+            .clone()
             .into_iter()
             .find(|i| {
                 let i_str = i.as_str().expect("Unable to read ignore_files as string");
@@ -44,24 +45,27 @@ pub(crate) fn read_config_file(directory: &Path) -> Option<RstowConfig> {
     match toml::from_str(content.as_str()) {
         Ok(conf) => Some(conf),
         Err(error) => {
-            debug!("Unable to read rstow configuration file in {} : {}", directory.display(), error.description());
+            debug!(
+                "Unable to read rstow configuration file in {} : {}",
+                directory.display(),
+                error.to_string()
+            );
             None
         }
     }
 }
 
-
 #[cfg(test)]
 mod test_config {
     use super::*;
-    use test_utils::*;
-    use std::path::PathBuf;
     use std::fs::File;
     use std::io::Write;
+    use std::path::PathBuf;
+    use test_utils::*;
 
     #[test]
     fn test_config_file() {
-        with_test_directories(&"test_config_file",|source: &PathBuf, target: &PathBuf| {
+        with_test_directories(&"test_config_file", |source: &PathBuf, target: &PathBuf| {
             let mut config_file = File::create(source.as_path().join(RSTOW_FILE_NAME)).unwrap();
             let content = r#"
     symlink_current_dir = true
@@ -81,9 +85,12 @@ mod test_config {
 
     #[test]
     fn test_no_config_file() {
-        with_test_directories(&"test_no_config_file",|source: &PathBuf, target: &PathBuf| {
-            let config_opt: Option<RstowConfig> = read_config_file(source.as_path());
-            assert!(config_opt.is_none());
-        });
+        with_test_directories(
+            &"test_no_config_file",
+            |source: &PathBuf, target: &PathBuf| {
+                let config_opt: Option<RstowConfig> = read_config_file(source.as_path());
+                assert!(config_opt.is_none());
+            },
+        );
     }
 }

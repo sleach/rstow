@@ -1,10 +1,9 @@
-
 use failure::Fail;
-use std::path::{Path, PathBuf};
 use std::clone::Clone;
 use std::fmt::*;
-use std::ops::Deref;
 use std::io;
+use std::ops::Deref;
+use std::path::{Path, PathBuf};
 
 #[derive(Fail, Debug, Clone)]
 pub(crate) enum AppError {
@@ -12,28 +11,28 @@ pub(crate) enum AppError {
     StowPathError {
         source: ErrorPath,
         target: ErrorPath,
-        cause: String
+        cause: String,
     },
 
     #[fail(display = "An IO error append : {}", msg)]
-    IOError {
-        msg: String
-    },
+    IOError { msg: String },
 
     #[fail(display = "Unable to apply stow because of previous errors")]
-    ApplyError
+    ApplyError,
 }
-
 
 impl From<io::Error> for AppError {
     fn from(io: io::Error) -> Self {
-        AppError::IOError { msg: io.to_string()}
+        AppError::IOError {
+            msg: io.to_string(),
+        }
     }
 }
 
-
 #[derive(Debug, Clone)]
-pub struct ErrorPath { path: PathBuf }
+pub struct ErrorPath {
+    path: PathBuf,
+}
 
 impl Deref for ErrorPath {
     type Target = PathBuf;
@@ -57,6 +56,8 @@ impl From<PathBuf> for ErrorPath {
 
 impl<'a> From<&'a Path> for ErrorPath {
     fn from(path: &Path) -> Self {
-        ErrorPath { path: path.to_path_buf() }
+        ErrorPath {
+            path: path.to_path_buf(),
+        }
     }
 }
